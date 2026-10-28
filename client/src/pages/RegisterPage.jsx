@@ -82,7 +82,7 @@ export default function RegisterPage() {
         password: form.password,
       });
 
-      toast.success('Registration successful! Please log in with your credentials.');
+      toast.success('Registration Successful — Your account has been created successfully.');
       // Redirect strictly to Login page
       navigate('/login');
     } catch (err) {

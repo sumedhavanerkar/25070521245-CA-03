@@ -37,7 +37,7 @@ export const register = async (req, res, next) => {
 
     res.status(201).json({
       success: true,
-      message: 'Account created successfully! Please sign in with your credentials.',
+      message: 'Registration Successful — Your account has been created successfully.',
       user: user.toPublicJSON(),
     });
   } catch (err) {

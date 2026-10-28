@@ -51,10 +51,24 @@ app.use(async (req, res, next) => {
       await connectDB();
     } catch (err) {
       console.error('Database connection middleware error:', err.message);
+      let userFriendlyMessage = 'Database connection unavailable.';
+
+      if (err.message.includes('bad auth') || err.message.includes('authentication failed')) {
+        userFriendlyMessage =
+          'MongoDB Authentication Failed (bad auth): The password for database user "sumedhavanerkar9_db_user" in MONGODB_URI is incorrect. Please reset the password in MongoDB Atlas (Database Access) and update MONGODB_URI.';
+      } else if (err.message.includes('whitelist') || err.message.includes('Could not connect to any servers')) {
+        userFriendlyMessage =
+          'MongoDB Network Access Blocked: Please allow access from anywhere (0.0.0.0/0) in MongoDB Atlas > Network Access.';
+      } else if (err.message.includes('MONGODB_URI is not defined')) {
+        userFriendlyMessage =
+          'MONGODB_URI is missing. Please configure MONGODB_URI in Vercel Project Settings > Environment Variables.';
+      } else {
+        userFriendlyMessage = `Database error: ${err.message}`;
+      }
+
       return res.status(503).json({
         success: false,
-        message:
-          'Database connection unavailable. Please check that MONGODB_URI is added in Vercel Project Settings > Environment Variables, and that MongoDB Atlas allows access from all IPs (0.0.0.0/0).',
+        message: userFriendlyMessage,
         error: err.message,
       });
     }
