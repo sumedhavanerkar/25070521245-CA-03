@@ -5,7 +5,7 @@ import {
   Edit, Trash2, CheckCircle, Package, AlertTriangle, Share2
 } from 'lucide-react';
 import { itemsApi } from '../services/api';
-import { CATEGORY_ICONS, formatDate, formatRelativeTime } from '../utils/constants';
+import { CATEGORY_ICONS, CATEGORY_DEFAULT_IMAGES, formatDate, formatRelativeTime } from '../utils/constants';
 import ConfirmDialog from '../components/ConfirmDialog';
 import toast from 'react-hot-toast';
 
@@ -153,14 +153,24 @@ export default function ItemDetailPage() {
             <div>
               {/* Image */}
               <div className="detail-image-section card">
-                {item.imageUrl ? (
-                  <img src={item.imageUrl} alt={item.title} className="detail-image" />
-                ) : (
-                  <div className="detail-image-placeholder">
-                    <span style={{ fontSize: '5rem' }} aria-hidden="true">{emoji}</span>
-                    <span style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>No image available</span>
-                  </div>
-                )}
+                {item.imageUrl || CATEGORY_DEFAULT_IMAGES[item.category] ? (
+                  <img
+                    src={item.imageUrl || CATEGORY_DEFAULT_IMAGES[item.category]}
+                    alt={item.title}
+                    className="detail-image"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
+                    }}
+                  />
+                ) : null}
+                <div
+                  className="detail-image-placeholder"
+                  style={{ display: item.imageUrl || CATEGORY_DEFAULT_IMAGES[item.category] ? 'none' : 'flex' }}
+                >
+                  <span style={{ fontSize: '5rem' }} aria-hidden="true">{emoji}</span>
+                  <span style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>No image available</span>
+                </div>
               </div>
 
               {/* Item info */}

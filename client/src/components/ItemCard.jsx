@@ -1,15 +1,24 @@
 import { Link } from 'react-router-dom';
 import { MapPin, Calendar, Tag, Clock } from 'lucide-react';
-import { CATEGORY_ICONS, formatRelativeTime, formatDate } from '../utils/constants';
+import { CATEGORY_ICONS, CATEGORY_DEFAULT_IMAGES, formatRelativeTime, formatDate } from '../utils/constants';
 
 function ItemImage({ imageUrl, title, category }) {
   const emoji = CATEGORY_ICONS[category] || '📦';
-  if (imageUrl) {
+  const defaultImg = CATEGORY_DEFAULT_IMAGES[category];
+  const displaySrc = imageUrl || defaultImg;
+
+  if (displaySrc) {
     return (
       <img
-        src={imageUrl}
+        src={displaySrc}
         alt={title}
-        onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+        loading="lazy"
+        onError={(e) => {
+          e.target.style.display = 'none';
+          if (e.target.nextSibling) {
+            e.target.nextSibling.style.display = 'flex';
+          }
+        }}
       />
     );
   }

@@ -1,6 +1,8 @@
-import { Link, NavLink } from 'react-router-dom';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
-import { Menu, X, MapPin } from 'lucide-react';
+import { Menu, X, User, LogOut } from 'lucide-react';
+import { useAuth } from '../hooks/useAuth';
+import toast from 'react-hot-toast';
 
 // Navigation links shown in the navbar
 const navLinks = [
@@ -14,6 +16,14 @@ const navLinks = [
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await logout();
+    toast.success('Logged out successfully');
+    navigate('/login');
+  };
 
   return (
     <nav className="navbar" role="navigation" aria-label="Main navigation">
@@ -43,7 +53,7 @@ export default function Navbar() {
           ))}
         </div>
 
-        {/* Desktop quick-action buttons */}
+        {/* Desktop user profile & actions */}
         <div className="navbar-actions">
           <Link to="/report-lost" className="btn btn-ghost btn-sm">
             🔴 Lost
@@ -51,6 +61,66 @@ export default function Navbar() {
           <Link to="/report-found" className="btn btn-primary btn-sm">
             🟢 Found
           </Link>
+
+          {user && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.65rem',
+                marginLeft: '0.5rem',
+                paddingLeft: '0.75rem',
+                borderLeft: '1.5px solid var(--border)',
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  padding: '0.3rem 0.65rem',
+                  background: 'var(--primary-50)',
+                  borderRadius: '20px',
+                  color: 'var(--primary-dark)',
+                  fontSize: '0.8125rem',
+                  fontWeight: 600,
+                }}
+                title={user.email}
+              >
+                <User size={14} />
+                <span>{user.name?.split(' ')[0]}</span>
+                {user.prn && (
+                  <span
+                    style={{
+                      background: 'white',
+                      padding: '0.1rem 0.4rem',
+                      borderRadius: '10px',
+                      fontSize: '0.7rem',
+                      color: 'var(--text-muted)',
+                    }}
+                  >
+                    {user.prn}
+                  </span>
+                )}
+              </div>
+
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                onClick={handleLogout}
+                title="Log out of your account"
+                style={{
+                  padding: '0.4rem 0.65rem',
+                  color: '#dc2626',
+                  borderColor: '#fecaca',
+                  background: '#fef2f2',
+                }}
+              >
+                <LogOut size={14} />
+                <span className="logout-text">Logout</span>
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Mobile hamburger button */}
@@ -67,6 +137,38 @@ export default function Navbar() {
       {/* Mobile dropdown menu */}
       {mobileOpen && (
         <div className="mobile-menu" role="menu">
+          {user && (
+            <div
+              style={{
+                padding: '0.75rem 1rem',
+                background: 'var(--primary-50)',
+                borderRadius: 'var(--radius)',
+                marginBottom: '0.5rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+            >
+              <div>
+                <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-primary)' }}>
+                  {user.name}
+                </div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                  {user.prn ? `PRN: ${user.prn} • ` : ''}{user.email}
+                </div>
+              </div>
+              <button
+                type="button"
+                className="btn btn-sm"
+                onClick={handleLogout}
+                style={{ background: '#fef2f2', color: '#dc2626', borderColor: '#fecaca' }}
+              >
+                <LogOut size={13} />
+                Logout
+              </button>
+            </div>
+          )}
+
           {navLinks.map((l) => (
             <NavLink
               key={l.to}

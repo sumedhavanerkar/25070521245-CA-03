@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react';
+import {
+  Eye, EyeOff, AlertCircle, CheckCircle2, User, Mail, Lock,
+  ShieldCheck, CreditCard, ArrowRight, Sparkles, BookOpen, Key
+} from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import toast from 'react-hot-toast';
 
@@ -8,186 +11,463 @@ export default function RegisterPage() {
   const { register } = useAuth();
   const navigate = useNavigate();
 
-  const [form, setForm] = useState({ name: '', email: '', password: '', confirmPassword: '' });
+  const [form, setForm] = useState({
+    name: '',
+    prn: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+  });
+
   const [errors, setErrors] = useState({});
   const [showPwd, setShowPwd] = useState(false);
+  const [showConfirmPwd, setShowConfirmPwd] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const validate = () => {
-    const e = {};
-    if (!form.name.trim()) e.name = 'Name is required';
-    else if (form.name.trim().length < 2) e.name = 'Name must be at least 2 characters';
-    if (!form.email) e.email = 'Email is required';
-    else if (!/^\S+@\S+\.\S+$/.test(form.email)) e.email = 'Invalid email address';
-    if (!form.password) e.password = 'Password is required';
-    else if (form.password.length < 8) e.password = 'Password must be at least 8 characters';
-    if (form.password !== form.confirmPassword) e.confirmPassword = 'Passwords do not match';
-    return e;
+    const errs = {};
+    if (!form.name.trim()) {
+      errs.name = 'Full Name is required';
+    } else if (form.name.trim().length < 2) {
+      errs.name = 'Name must be at least 2 characters';
+    }
+
+    if (!form.prn.trim()) {
+      errs.prn = 'PRN / Student ID is required';
+    } else if (form.prn.trim().length < 3) {
+      errs.prn = 'PRN must be at least 3 characters';
+    }
+
+    if (!form.email.trim()) {
+      errs.email = 'College Email ID is required';
+    } else if (!/^\S+@\S+\.\S+$/.test(form.email)) {
+      errs.email = 'Please enter a valid email address';
+    }
+
+    if (!form.password) {
+      errs.password = 'Password is required';
+    } else if (form.password.length < 6) {
+      errs.password = 'Password must be at least 6 characters';
+    }
+
+    if (!form.confirmPassword) {
+      errs.confirmPassword = 'Confirm Password is required';
+    } else if (form.password !== form.confirmPassword) {
+      errs.confirmPassword = 'Passwords do not match';
+    }
+
+    return errs;
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+    if (errors[name] || errors.general) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next[name];
+        delete next.general;
+        return next;
+      });
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const v = validate();
-    if (Object.keys(v).length) { setErrors(v); return; }
+    const validationErrors = validate();
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
+
     setLoading(true);
+    setErrors({});
     try {
-      await register(form.name, form.email, form.password);
-      toast.success('Account created! Welcome to Campus L&F 🎉');
-      navigate('/');
+      await register({
+        name: form.name.trim(),
+        prn: form.prn.trim().toUpperCase(),
+        email: form.email.trim().toLowerCase(),
+        password: form.password,
+      });
+
+      toast.success('Registration successful! Please log in with your credentials.');
+      // Redirect strictly to Login page per requirements
+      navigate('/login');
     } catch (err) {
-      toast.error(err.friendlyMessage || 'Registration failed');
-      setErrors({ general: err.friendlyMessage || 'Registration failed' });
+      const msg = err.friendlyMessage || 'Registration failed. Please check your details.';
+      toast.error(msg);
+      setErrors({ general: msg });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((f) => ({ ...f, [name]: value }));
-    if (errors[name]) setErrors((prev) => { const n = { ...prev }; delete n[name]; return n; });
-  };
-
-  const passwordStrength = (() => {
+  // Password strength meter
+  const getPasswordStrength = () => {
     const p = form.password;
     if (!p) return null;
     let score = 0;
+    if (p.length >= 6) score++;
     if (p.length >= 8) score++;
-    if (/[A-Z]/.test(p)) score++;
-    if (/[0-9]/.test(p)) score++;
+    if (/[A-Z]/.test(p) || /[0-9]/.test(p)) score++;
     if (/[^A-Za-z0-9]/.test(p)) score++;
-    return score;
-  })();
+    return score; // 1 to 4
+  };
 
-  const strengthColors = ['var(--danger)', 'var(--warning)', '#f59e0b', 'var(--success)'];
-  const strengthLabels = ['Weak', 'Fair', 'Good', 'Strong'];
+  const strengthScore = getPasswordStrength();
+  const strengthColors = ['#ef4444', '#f59e0b', '#3b82f6', '#10b981'];
+  const strengthLabels = ['Weak', 'Moderate', 'Good', 'Strong'];
 
   return (
-    <div className="auth-page">
-      <div className="auth-card">
-        <div className="auth-logo" aria-hidden="true">
-          <svg viewBox="0 0 52 52" fill="none" style={{ width: 52, height: 52 }}>
-            <rect width="52" height="52" rx="14" fill="#4F46E5"/>
-            <circle cx="26" cy="26" r="12" stroke="white" strokeWidth="3" fill="none"/>
-            <circle cx="26" cy="26" r="4" fill="white"/>
-            <path d="M26 16v3M26 33v3M16 26h3M33 26h3" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
-          </svg>
-        </div>
-        <h1 className="auth-title">Create Account</h1>
-        <p className="auth-subtitle">Join the Campus L&amp;F community</p>
-
-        {errors.general && (
-          <div role="alert" style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 'var(--radius)', padding: '0.75rem 1rem', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color: 'var(--danger)' }}>
-            <AlertCircle size={16} aria-hidden="true" /> {errors.general}
+    <div className="auth-split-wrapper">
+      {/* ── Left Side: Campus Showcase ─────────────────────────────────── */}
+      <div className="auth-showcase-panel">
+        <div className="showcase-header">
+          <div className="showcase-badge">
+            <Sparkles size={16} />
+            <span>New Student Onboarding • PRN: 25070521245</span>
           </div>
-        )}
 
-        <form onSubmit={handleSubmit} noValidate aria-label="Registration form">
-          <div className="form-group" style={{ marginBottom: '1rem' }}>
-            <label className="form-label" htmlFor="name">Full Name</label>
-            <input
-              id="name"
-              type="text"
-              name="name"
-              className={`form-control${errors.name ? ' error' : ''}`}
-              placeholder="Your full name"
-              value={form.name}
-              onChange={handleChange}
-              autoComplete="name"
-              aria-required="true"
-              aria-invalid={!!errors.name}
+          {/* College Student Life Hero Banner Image */}
+          <div className="showcase-hero-banner">
+            <img
+              src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=900&q=80"
+              alt="Students on College Campus"
+              className="showcase-hero-img"
+              onError={(e) => { e.target.style.display = 'none'; }}
             />
-            {errors.name && <span className="form-error" role="alert"><AlertCircle size={13} aria-hidden="true" /> {errors.name}</span>}
-          </div>
-
-          <div className="form-group" style={{ marginBottom: '1rem' }}>
-            <label className="form-label" htmlFor="reg-email">College Email</label>
-            <input
-              id="reg-email"
-              type="email"
-              name="email"
-              className={`form-control${errors.email ? ' error' : ''}`}
-              placeholder="student@college.edu"
-              value={form.email}
-              onChange={handleChange}
-              autoComplete="email"
-              aria-required="true"
-              aria-invalid={!!errors.email}
-            />
-            {errors.email && <span className="form-error" role="alert"><AlertCircle size={13} aria-hidden="true" /> {errors.email}</span>}
-          </div>
-
-          <div className="form-group" style={{ marginBottom: '1rem' }}>
-            <label className="form-label" htmlFor="reg-password">Password</label>
-            <div style={{ position: 'relative' }}>
-              <input
-                id="reg-password"
-                type={showPwd ? 'text' : 'password'}
-                name="password"
-                className={`form-control${errors.password ? ' error' : ''}`}
-                placeholder="At least 8 characters"
-                value={form.password}
-                onChange={handleChange}
-                autoComplete="new-password"
-                style={{ paddingRight: '2.75rem' }}
-                aria-required="true"
-                aria-invalid={!!errors.password}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPwd((s) => !s)}
-                aria-label={showPwd ? 'Hide password' : 'Show password'}
-                style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex' }}
-              >
-                {showPwd ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
+            <div className="showcase-hero-gradient" />
+            <div className="showcase-hero-tag">
+              🎓 Student Network • Secure Belonging Protection
             </div>
-            {/* Password strength indicator */}
-            {passwordStrength !== null && (
-              <div style={{ marginTop: '0.4rem' }}>
-                <div style={{ display: 'flex', gap: '3px', marginBottom: '0.25rem' }}>
-                  {[1, 2, 3, 4].map((s) => (
-                    <div key={s} style={{ flex: 1, height: 4, borderRadius: 2, background: passwordStrength >= s ? strengthColors[passwordStrength - 1] : 'var(--border)', transition: 'background 0.2s' }} />
-                  ))}
-                </div>
-                <span style={{ fontSize: '0.75rem', color: strengthColors[passwordStrength - 1], fontWeight: 600 }}>
-                  {strengthLabels[passwordStrength - 1]}
-                </span>
-              </div>
-            )}
-            {errors.password && <span className="form-error" role="alert"><AlertCircle size={13} aria-hidden="true" /> {errors.password}</span>}
           </div>
 
-          <div className="form-group" style={{ marginBottom: '1.5rem' }}>
-            <label className="form-label" htmlFor="confirmPassword">Confirm Password</label>
-            <input
-              id="confirmPassword"
-              type={showPwd ? 'text' : 'password'}
-              name="confirmPassword"
-              className={`form-control${errors.confirmPassword ? ' error' : ''}`}
-              placeholder="Repeat your password"
-              value={form.confirmPassword}
-              onChange={handleChange}
-              autoComplete="new-password"
-              aria-required="true"
-              aria-invalid={!!errors.confirmPassword}
+          <h1 className="showcase-title">
+            Join Your Campus Network.<br />
+            <span>Never Lose What Matters.</span>
+          </h1>
+          <p className="showcase-desc">
+            Register your student profile to report items you’ve lost or found across
+            lecture halls, libraries, cafeterias, and campus grounds.
+          </p>
+        </div>
+
+        {/* Visual Item Cards with Photos */}
+        <div className="showcase-items-grid">
+          <div className="showcase-item-card">
+            <img
+              src="https://images.unsplash.com/photo-1578852612716-854e527abf50?auto=format&fit=crop&w=120&q=80"
+              alt="Student ID Card"
+              className="item-card-photo"
+              onError={(e) => { e.target.style.display = 'none'; }}
             />
-            {form.confirmPassword && form.password === form.confirmPassword && !errors.confirmPassword && (
-              <span style={{ fontSize: '0.8rem', color: 'var(--success)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                <CheckCircle size={13} aria-hidden="true" /> Passwords match
-              </span>
-            )}
-            {errors.confirmPassword && <span className="form-error" role="alert"><AlertCircle size={13} aria-hidden="true" /> {errors.confirmPassword}</span>}
+            <div className="item-card-info">
+              <strong>College ID &amp; Hall Ticket</strong>
+              <span>Exam Center &amp; Labs</span>
+            </div>
+            <span className="item-status-pill recovered">Protected</span>
           </div>
 
-          <button type="submit" className="btn btn-primary w-full" disabled={loading} aria-busy={loading}>
-            {loading ? 'Creating account...' : 'Create Account'}
-          </button>
-        </form>
+          <div className="showcase-item-card">
+            <img
+              src="https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=120&q=80"
+              alt="Backpack"
+              className="item-card-photo"
+              onError={(e) => { e.target.style.display = 'none'; }}
+            />
+            <div className="item-card-info">
+              <strong>Backpacks &amp; Laptops</strong>
+              <span>Library &amp; Study Cubicles</span>
+            </div>
+            <span className="item-status-pill safe">Traceable</span>
+          </div>
 
-        <p className="auth-footer">
-          Already have an account? <Link to="/login">Sign in</Link>
-        </p>
+          <div className="showcase-item-card">
+            <img
+              src="https://images.unsplash.com/photo-1602143407151-7111542de6e8?auto=format&fit=crop&w=120&q=80"
+              alt="Water Bottle"
+              className="item-card-photo"
+              onError={(e) => { e.target.style.display = 'none'; }}
+            />
+            <div className="item-card-info">
+              <strong>Bottles &amp; Flasks</strong>
+              <span>Cafeteria &amp; Sports Ground</span>
+            </div>
+            <span className="item-status-pill resolved">Recovered</span>
+          </div>
+
+          <div className="showcase-item-card">
+            <img
+              src="https://images.unsplash.com/photo-1582139329536-e7284fece509?auto=format&fit=crop&w=120&q=80"
+              alt="Keys"
+              className="item-card-photo"
+              onError={(e) => { e.target.style.display = 'none'; }}
+            />
+            <div className="item-card-info">
+              <strong>Hostel &amp; Vehicle Keys</strong>
+              <span>Parking &amp; Hostel Blocks</span>
+            </div>
+            <span className="item-status-pill returned">Returned</span>
+          </div>
+        </div>
+
+        {/* Showcase Footer Features */}
+        <div className="showcase-footer">
+          <div className="footer-feature">
+            <span className="feature-dot"></span>
+            <span>Bcrypt Hashed Passwords</span>
+          </div>
+          <div className="footer-feature">
+            <span className="feature-dot"></span>
+            <span>Duplicate PRN Protection</span>
+          </div>
+          <div className="footer-feature">
+            <span className="feature-dot"></span>
+            <span>Instant MongoDB Sync</span>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Right Side: Modern Registration Form ───────────────────────── */}
+      <div className="auth-form-panel">
+        <div className="auth-form-inner">
+          <div className="auth-brand-row">
+            <div className="brand-logo-circle">
+              <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: 28, height: 28 }}>
+                <rect width="36" height="36" rx="10" fill="#4F46E5"/>
+                <circle cx="18" cy="18" r="8" stroke="white" strokeWidth="2.5" fill="none"/>
+                <circle cx="18" cy="18" r="2.5" fill="white"/>
+                <path d="M18 12v2M18 22v2M12 18h2M22 18h2" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            </div>
+            <div>
+              <div className="brand-name">Campus Lost &amp; Found</div>
+              <div className="brand-tagline">Student Account Registration</div>
+            </div>
+          </div>
+
+          <div className="form-header-text">
+            <h2>Create Student Account</h2>
+            <p>Fill in your details below to register on the campus portal.</p>
+          </div>
+
+          {errors.general && (
+            <div className="auth-alert error" role="alert">
+              <AlertCircle size={18} />
+              <span>{errors.general}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} noValidate>
+            {/* Full Name */}
+            <div className="form-group-modern">
+              <label htmlFor="reg-name">Full Name</label>
+              <div className="input-icon-wrapper">
+                <User size={18} className="input-icon" />
+                <input
+                  id="reg-name"
+                  type="text"
+                  name="name"
+                  className={`form-control-modern ${errors.name ? 'has-error' : ''}`}
+                  placeholder="e.g., Sumedh Vanerkar"
+                  value={form.name}
+                  onChange={handleChange}
+                  autoComplete="name"
+                  aria-required="true"
+                  aria-invalid={!!errors.name}
+                />
+              </div>
+              {errors.name && (
+                <span className="field-error-msg">
+                  <AlertCircle size={13} /> {errors.name}
+                </span>
+              )}
+            </div>
+
+            {/* PRN / Student ID */}
+            <div className="form-group-modern">
+              <label htmlFor="reg-prn">PRN / Student ID</label>
+              <div className="input-icon-wrapper">
+                <CreditCard size={18} className="input-icon" />
+                <input
+                  id="reg-prn"
+                  type="text"
+                  name="prn"
+                  className={`form-control-modern ${errors.prn ? 'has-error' : ''}`}
+                  placeholder="e.g., 25070521245"
+                  value={form.prn}
+                  onChange={handleChange}
+                  autoComplete="off"
+                  aria-required="true"
+                  aria-invalid={!!errors.prn}
+                />
+              </div>
+              {errors.prn && (
+                <span className="field-error-msg">
+                  <AlertCircle size={13} /> {errors.prn}
+                </span>
+              )}
+            </div>
+
+            {/* College Email ID */}
+            <div className="form-group-modern">
+              <label htmlFor="reg-email">College Email ID</label>
+              <div className="input-icon-wrapper">
+                <Mail size={18} className="input-icon" />
+                <input
+                  id="reg-email"
+                  type="email"
+                  name="email"
+                  className={`form-control-modern ${errors.email ? 'has-error' : ''}`}
+                  placeholder="student@college.edu"
+                  value={form.email}
+                  onChange={handleChange}
+                  autoComplete="email"
+                  aria-required="true"
+                  aria-invalid={!!errors.email}
+                />
+              </div>
+              {errors.email && (
+                <span className="field-error-msg">
+                  <AlertCircle size={13} /> {errors.email}
+                </span>
+              )}
+            </div>
+
+            {/* Password */}
+            <div className="form-group-modern">
+              <label htmlFor="reg-password">Password</label>
+              <div className="input-icon-wrapper">
+                <Lock size={18} className="input-icon" />
+                <input
+                  id="reg-password"
+                  type={showPwd ? 'text' : 'password'}
+                  name="password"
+                  className={`form-control-modern ${errors.password ? 'has-error' : ''}`}
+                  placeholder="At least 6 characters"
+                  value={form.password}
+                  onChange={handleChange}
+                  autoComplete="new-password"
+                  style={{ paddingRight: '2.8rem' }}
+                  aria-required="true"
+                  aria-invalid={!!errors.password}
+                />
+                <button
+                  type="button"
+                  className="password-toggle-btn"
+                  onClick={() => setShowPwd((prev) => !prev)}
+                  aria-label={showPwd ? 'Hide password' : 'Show password'}
+                  title={showPwd ? 'Hide password' : 'Show password'}
+                >
+                  {showPwd ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+
+              {/* Dynamic strength bar */}
+              {strengthScore !== null && (
+                <div className="password-strength-bar">
+                  <div className="strength-indicators">
+                    {[1, 2, 3, 4].map((bar) => (
+                      <div
+                        key={bar}
+                        className="strength-segment"
+                        style={{
+                          background: strengthScore >= bar ? strengthColors[strengthScore - 1] : '#e2e8f0',
+                        }}
+                      />
+                    ))}
+                  </div>
+                  <span
+                    className="strength-text"
+                    style={{ color: strengthColors[strengthScore - 1] }}
+                  >
+                    Strength: {strengthLabels[strengthScore - 1]}
+                  </span>
+                </div>
+              )}
+
+              {errors.password && (
+                <span className="field-error-msg">
+                  <AlertCircle size={13} /> {errors.password}
+                </span>
+              )}
+            </div>
+
+            {/* Confirm Password */}
+            <div className="form-group-modern">
+              <label htmlFor="reg-confirm-password">Confirm Password</label>
+              <div className="input-icon-wrapper">
+                <Lock size={18} className="input-icon" />
+                <input
+                  id="reg-confirm-password"
+                  type={showConfirmPwd ? 'text' : 'password'}
+                  name="confirmPassword"
+                  className={`form-control-modern ${errors.confirmPassword ? 'has-error' : ''}`}
+                  placeholder="Re-enter your password"
+                  value={form.confirmPassword}
+                  onChange={handleChange}
+                  autoComplete="new-password"
+                  style={{ paddingRight: '2.8rem' }}
+                  aria-required="true"
+                  aria-invalid={!!errors.confirmPassword}
+                />
+                <button
+                  type="button"
+                  className="password-toggle-btn"
+                  onClick={() => setShowConfirmPwd((prev) => !prev)}
+                  aria-label={showConfirmPwd ? 'Hide confirm password' : 'Show confirm password'}
+                  title={showConfirmPwd ? 'Hide password' : 'Show password'}
+                >
+                  {showConfirmPwd ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+
+              {/* Match indicator */}
+              {form.confirmPassword && form.password === form.confirmPassword && (
+                <span className="field-success-msg">
+                  <CheckCircle2 size={13} /> Passwords match
+                </span>
+              )}
+
+              {errors.confirmPassword && (
+                <span className="field-error-msg">
+                  <AlertCircle size={13} /> {errors.confirmPassword}
+                </span>
+              )}
+            </div>
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              className="btn-auth-primary"
+              disabled={loading}
+              aria-busy={loading}
+            >
+              {loading ? (
+                <span className="btn-loading-content">
+                  <span className="btn-spinner" /> Registering Account...
+                </span>
+              ) : (
+                <span className="btn-text-content">
+                  Create Student Account <ArrowRight size={17} />
+                </span>
+              )}
+            </button>
+          </form>
+
+          {/* Login Redirect Link */}
+          <div className="auth-footer-prompt">
+            <span>Already have an account?</span>{' '}
+            <Link to="/login" className="auth-link-highlight">
+              Sign In here
+            </Link>
+          </div>
+
+          <div className="auth-security-note">
+            <ShieldCheck size={14} />
+            <span>FLEXI CA-3 Project • PRN: 25070521245 • Secure Student Authentication</span>
+          </div>
+        </div>
       </div>
     </div>
   );

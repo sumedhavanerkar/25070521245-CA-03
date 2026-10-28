@@ -10,6 +10,15 @@ const userSchema = new mongoose.Schema(
       minlength: [2, 'Name must be at least 2 characters'],
       maxlength: [60, 'Name cannot exceed 60 characters'],
     },
+    prn: {
+      type: String,
+      required: [true, 'PRN / Student ID is required'],
+      unique: true,
+      trim: true,
+      uppercase: true,
+      minlength: [3, 'PRN must be at least 3 characters'],
+      maxlength: [30, 'PRN cannot exceed 30 characters'],
+    },
     email: {
       type: String,
       required: [true, 'Email is required'],
@@ -54,6 +63,7 @@ userSchema.methods.toPublicJSON = function () {
   return {
     _id: this._id,
     name: this.name,
+    prn: this.prn,
     email: this.email,
     role: this.role,
     createdAt: this.createdAt,

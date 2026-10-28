@@ -7,16 +7,26 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Try to restore session from localStorage token
+  // Restore authenticated session from localStorage token on load
   useEffect(() => {
     const restore = async () => {
       const token = localStorage.getItem('clf_token');
-      if (!token) { setLoading(false); return; }
+      if (!token) {
+        setUser(null);
+        setLoading(false);
+        return;
+      }
       try {
         const res = await authApi.getMe();
-        setUser(res.data.user);
+        if (res.data?.user) {
+          setUser(res.data.user);
+        } else {
+          localStorage.removeItem('clf_token');
+          setUser(null);
+        }
       } catch {
         localStorage.removeItem('clf_token');
+        setUser(null);
       } finally {
         setLoading(false);
       }
@@ -26,28 +36,43 @@ export const AuthProvider = ({ children }) => {
 
   const login = useCallback(async (email, password) => {
     const res = await authApi.login({ email, password });
-    const { token, user } = res.data;
-    localStorage.setItem('clf_token', token);
-    setUser(user);
-    return user;
+    const { token, user: userData } = res.data;
+    if (token) {
+      localStorage.setItem('clf_token', token);
+      setUser(userData);
+    }
+    return userData;
   }, []);
 
-  const register = useCallback(async (name, email, password) => {
-    const res = await authApi.register({ name, email, password });
-    const { token, user } = res.data;
-    localStorage.setItem('clf_token', token);
-    setUser(user);
-    return user;
+  const register = useCallback(async (userData) => {
+    // Sends registration data (name, prn, email, password) to backend
+    // User is NOT automatically logged in - redirected to Login page per requirements
+    const res = await authApi.register(userData);
+    return res.data;
   }, []);
 
   const logout = useCallback(async () => {
-    try { await authApi.logout(); } catch { /* ignore */ }
-    localStorage.removeItem('clf_token');
-    setUser(null);
+    try {
+      await authApi.logout();
+    } catch {
+      // Ignore network errors on logout
+    } finally {
+      localStorage.removeItem('clf_token');
+      setUser(null);
+    }
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        login,
+        register,
+        logout,
+        isAuthenticated: !!user,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -55,6 +80,8 @@ export const AuthProvider = ({ children }) => {
 
 export const useAuth = () => {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
+  if (!ctx) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
   return ctx;
 };

@@ -31,6 +31,7 @@ The **Campus Lost & Found Portal** provides a centralized digital platform where
 
 | Feature | Description |
 |---|---|
+| 🔐 Student Authentication | Secure student registration with PRN, Bcrypt password hashing, and JWT authorization |
 | 🔴 Report Lost Item | Submit details of an item you lost |
 | 🟢 Report Found Item | Report an item you found on campus |
 | 🔍 Browse & Search | Search all listings with filters |
@@ -166,6 +167,15 @@ The **Campus Lost & Found Portal** provides a centralized digital platform where
 
 ## 📡 API Endpoints
 
+### Authentication Endpoints (Public)
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/api/auth/register` | Register new student (Name, PRN, Email, Password) |
+| POST | `/api/auth/login` | Sign in with registered credentials (returns JWT token) |
+| GET | `/api/auth/me` | Fetch authenticated student profile |
+| POST | `/api/auth/logout` | Sign out and end session |
+
+### Items Endpoints (Protected — Bearer Token Required)
 | Method | Endpoint | Description |
 |---|---|---|
 | GET | `/api/health` | Check server and database status |

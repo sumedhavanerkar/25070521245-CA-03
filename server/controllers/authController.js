@@ -12,26 +12,32 @@ const signToken = (userId) => {
 // POST /api/auth/register
 export const register = async (req, res, next) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, prn, email, password } = req.body;
 
-    // Check if user already exists
-    const existing = await User.findOne({ email: email.toLowerCase() });
-    if (existing) {
+    // Check if email already registered
+    const existingEmail = await User.findOne({ email: email.toLowerCase() });
+    if (existingEmail) {
       return next(new AppError('An account with this email already exists', 409));
     }
 
-    const user = await User.create({
-      name,
-      email,
-      passwordHash: password, // pre-save hook will hash it
-    });
+    // Check if PRN already registered
+    if (prn) {
+      const existingPrn = await User.findOne({ prn: prn.trim().toUpperCase() });
+      if (existingPrn) {
+        return next(new AppError('An account with this PRN / Student ID already exists', 409));
+      }
+    }
 
-    const token = signToken(user._id);
+    const user = await User.create({
+      name: name.trim(),
+      prn: prn ? prn.trim().toUpperCase() : undefined,
+      email: email.toLowerCase(),
+      passwordHash: password, // pre-save hook will hash it using bcrypt
+    });
 
     res.status(201).json({
       success: true,
-      message: 'Account created successfully',
-      token,
+      message: 'Account created successfully! Please sign in with your credentials.',
       user: user.toPublicJSON(),
     });
   } catch (err) {
@@ -44,8 +50,15 @@ export const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
-    // Select passwordHash explicitly (it's excluded by default)
-    const user = await User.findOne({ email: email.toLowerCase() }).select('+passwordHash');
+    // Support login by email or PRN
+    const identifier = (email || '').trim();
+    const user = await User.findOne({
+      $or: [
+        { email: identifier.toLowerCase() },
+        { prn: identifier.toUpperCase() },
+      ],
+    }).select('+passwordHash');
+
     if (!user) {
       return next(new AppError('Invalid email or password', 401));
     }

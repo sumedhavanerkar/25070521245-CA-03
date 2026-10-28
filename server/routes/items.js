@@ -5,11 +5,14 @@ import {
   createItem, updateItem, updateStatus,
   deleteItem,
 } from '../controllers/itemController.js';
-import { optionalAuth } from '../middleware/auth.js';
+import { protect } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
 import { ITEM_CATEGORIES } from '../models/Item.js';
 
 const router = Router();
+
+// Protect all /api/items routes — requires valid JWT token
+router.use(protect);
 
 // Validation rules for creating a new item (type is required)
 const itemBodyRules = [
@@ -40,21 +43,20 @@ const idRule = [
 router.get('/stats', getStats);
 
 // GET /api/items
-router.get('/', optionalAuth, getItems);
+router.get('/', getItems);
 
 // GET /api/items/:id
 router.get('/:id', validate(idRule), getItemById);
 
-// POST /api/items  — create a new report (no login required)
-router.post('/', optionalAuth, validate(itemBodyRules), createItem);
+// POST /api/items  — create a new report
+router.post('/', validate(itemBodyRules), createItem);
 
-// PUT /api/items/:id  — update an existing item (no login required for educational project)
-router.put('/:id', optionalAuth, validate([...idRule, ...itemUpdateRules]), updateItem);
+// PUT /api/items/:id  — update an existing item
+router.put('/:id', validate([...idRule, ...itemUpdateRules]), updateItem);
 
 // PATCH /api/items/:id/status  — update status only
 router.patch(
   '/:id/status',
-  optionalAuth,
   validate([
     param('id').isMongoId().withMessage('Invalid item ID'),
     body('status').isIn(['active', 'claimed', 'resolved']).withMessage('Invalid status'),
@@ -62,7 +64,7 @@ router.patch(
   updateStatus
 );
 
-// DELETE /api/items/:id  — delete an item (no login required for educational project)
-router.delete('/:id', optionalAuth, validate(idRule), deleteItem);
+// DELETE /api/items/:id  — delete an item
+router.delete('/:id', validate(idRule), deleteItem);
 
 export default router;

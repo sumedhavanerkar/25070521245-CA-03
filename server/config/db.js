@@ -2,12 +2,17 @@ import 'dotenv/config';
 import mongoose from 'mongoose';
 
 const connectDB = async () => {
-  const uri = process.env.MONGODB_URI;
+  let uri = process.env.MONGODB_URI;
   if (!uri) {
     throw new Error(
       'MONGODB_URI is not defined in environment variables.\n' +
       'Please copy server/.env.example to server/.env and fill in your MongoDB Atlas connection string.'
     );
+  }
+
+  // Auto-clean angle brackets if user wrote <password> instead of password
+  if (uri.includes('<') && uri.includes('>')) {
+    uri = uri.replace(/<([^>]+)>/, '$1');
   }
 
   const options = {
