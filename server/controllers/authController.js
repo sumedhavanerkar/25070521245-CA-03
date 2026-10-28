@@ -4,7 +4,7 @@ import { AppError } from '../utils/AppError.js';
 
 // Generate JWT token
 const signToken = (userId) => {
-  return jwt.sign({ id: userId }, process.env.JWT_SECRET, {
+  return jwt.sign({ id: userId }, process.env.JWT_SECRET || 'clf_fallback_jwt_secret_key_campus_portal_2026', {
     expiresIn: process.env.JWT_EXPIRES_IN || '7d',
   });
 };

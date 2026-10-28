@@ -77,7 +77,7 @@ export default function LoginPage() {
         <div className="showcase-header">
           <div className="showcase-badge">
             <ShieldCheck size={16} />
-            <span>Campus Community Platform • PRN: 25070521245</span>
+            <span>Campus Community Platform</span>
           </div>
 
           {/* College Campus Hero Banner Image */}
@@ -334,7 +334,7 @@ export default function LoginPage() {
 
           <div className="auth-security-note">
             <ShieldCheck size={14} />
-            <span>FLEXI CA-3 Project • PRN: 25070521245 • Verified Session Guard</span>
+            <span>FLEXI CA-3 Project • Verified Session Guard</span>
           </div>
         </div>
       </div>

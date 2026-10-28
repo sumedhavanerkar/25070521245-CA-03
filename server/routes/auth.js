@@ -8,7 +8,6 @@ const router = Router();
 
 const registerRules = [
   body('name').trim().isLength({ min: 2, max: 60 }).withMessage('Name must be 2–60 characters'),
-  body('prn').trim().notEmpty().withMessage('PRN / Student ID is required').isLength({ min: 3, max: 30 }).withMessage('PRN must be 3–30 characters'),
   body('email').isEmail().normalizeEmail().withMessage('Valid email required'),
   body('password')
     .isLength({ min: 6 })

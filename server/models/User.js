@@ -12,12 +12,9 @@ const userSchema = new mongoose.Schema(
     },
     prn: {
       type: String,
-      required: [true, 'PRN / Student ID is required'],
-      unique: true,
       trim: true,
       uppercase: true,
-      minlength: [3, 'PRN must be at least 3 characters'],
-      maxlength: [30, 'PRN cannot exceed 30 characters'],
+      sparse: true,
     },
     email: {
       type: String,

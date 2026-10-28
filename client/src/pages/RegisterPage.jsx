@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Eye, EyeOff, AlertCircle, CheckCircle2, User, Mail, Lock,
-  ShieldCheck, CreditCard, ArrowRight, Sparkles, BookOpen, Key
+  ShieldCheck, ArrowRight, Sparkles
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import toast from 'react-hot-toast';
@@ -13,7 +13,6 @@ export default function RegisterPage() {
 
   const [form, setForm] = useState({
     name: '',
-    prn: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -30,12 +29,6 @@ export default function RegisterPage() {
       errs.name = 'Full Name is required';
     } else if (form.name.trim().length < 2) {
       errs.name = 'Name must be at least 2 characters';
-    }
-
-    if (!form.prn.trim()) {
-      errs.prn = 'PRN / Student ID is required';
-    } else if (form.prn.trim().length < 3) {
-      errs.prn = 'PRN must be at least 3 characters';
     }
 
     if (!form.email.trim()) {
@@ -85,13 +78,12 @@ export default function RegisterPage() {
     try {
       await register({
         name: form.name.trim(),
-        prn: form.prn.trim().toUpperCase(),
         email: form.email.trim().toLowerCase(),
         password: form.password,
       });
 
       toast.success('Registration successful! Please log in with your credentials.');
-      // Redirect strictly to Login page per requirements
+      // Redirect strictly to Login page
       navigate('/login');
     } catch (err) {
       const msg = err.friendlyMessage || 'Registration failed. Please check your details.';
@@ -125,7 +117,7 @@ export default function RegisterPage() {
         <div className="showcase-header">
           <div className="showcase-badge">
             <Sparkles size={16} />
-            <span>New Student Onboarding • PRN: 25070521245</span>
+            <span>New Student Onboarding • Campus Community</span>
           </div>
 
           {/* College Student Life Hero Banner Image */}
@@ -219,7 +211,7 @@ export default function RegisterPage() {
           </div>
           <div className="footer-feature">
             <span className="feature-dot"></span>
-            <span>Duplicate PRN Protection</span>
+            <span>Verified Student Access</span>
           </div>
           <div className="footer-feature">
             <span className="feature-dot"></span>
@@ -269,7 +261,7 @@ export default function RegisterPage() {
                   type="text"
                   name="name"
                   className={`form-control-modern ${errors.name ? 'has-error' : ''}`}
-                  placeholder="e.g., Sumedh Vanerkar"
+                  placeholder="e.g., Nishika Sumer Kalamkar"
                   value={form.name}
                   onChange={handleChange}
                   autoComplete="name"
@@ -284,31 +276,6 @@ export default function RegisterPage() {
               )}
             </div>
 
-            {/* PRN / Student ID */}
-            <div className="form-group-modern">
-              <label htmlFor="reg-prn">PRN / Student ID</label>
-              <div className="input-icon-wrapper">
-                <CreditCard size={18} className="input-icon" />
-                <input
-                  id="reg-prn"
-                  type="text"
-                  name="prn"
-                  className={`form-control-modern ${errors.prn ? 'has-error' : ''}`}
-                  placeholder="e.g., 25070521245"
-                  value={form.prn}
-                  onChange={handleChange}
-                  autoComplete="off"
-                  aria-required="true"
-                  aria-invalid={!!errors.prn}
-                />
-              </div>
-              {errors.prn && (
-                <span className="field-error-msg">
-                  <AlertCircle size={13} /> {errors.prn}
-                </span>
-              )}
-            </div>
-
             {/* College Email ID */}
             <div className="form-group-modern">
               <label htmlFor="reg-email">College Email ID</label>
@@ -319,7 +286,7 @@ export default function RegisterPage() {
                   type="email"
                   name="email"
                   className={`form-control-modern ${errors.email ? 'has-error' : ''}`}
-                  placeholder="student@college.edu"
+                  placeholder="e.g., student@college.edu"
                   value={form.email}
                   onChange={handleChange}
                   autoComplete="email"
@@ -363,26 +330,26 @@ export default function RegisterPage() {
                 </button>
               </div>
 
-              {/* Dynamic strength bar */}
-              {strengthScore !== null && (
-                <div className="password-strength-bar">
-                  <div className="strength-indicators">
-                    {[1, 2, 3, 4].map((bar) => (
-                      <div
-                        key={bar}
-                        className="strength-segment"
+              {/* Password strength indicator */}
+              {form.password && (
+                <div className="password-strength-wrap">
+                  <div className="strength-bars">
+                    {[1, 2, 3, 4].map((level) => (
+                      <span
+                        key={level}
+                        className="strength-bar-segment"
                         style={{
-                          background: strengthScore >= bar ? strengthColors[strengthScore - 1] : '#e2e8f0',
+                          backgroundColor:
+                            strengthScore >= level
+                              ? strengthColors[strengthScore - 1]
+                              : '#e2e8f0',
                         }}
                       />
                     ))}
                   </div>
-                  <span
-                    className="strength-text"
-                    style={{ color: strengthColors[strengthScore - 1] }}
-                  >
-                    Strength: {strengthLabels[strengthScore - 1]}
-                  </span>
+                  <div className="strength-label" style={{ color: strengthColors[strengthScore - 1] || 'var(--text-muted)' }}>
+                    Strength: <strong>{strengthLabels[strengthScore - 1] || 'Too short'}</strong>
+                  </div>
                 </div>
               )}
 
@@ -465,7 +432,7 @@ export default function RegisterPage() {
 
           <div className="auth-security-note">
             <ShieldCheck size={14} />
-            <span>FLEXI CA-3 Project • PRN: 25070521245 • Secure Student Authentication</span>
+            <span>FLEXI CA-3 Project • Secure Student Authentication</span>
           </div>
         </div>
       </div>
