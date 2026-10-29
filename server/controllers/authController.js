@@ -1,11 +1,12 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import { AppError } from '../utils/AppError.js';
+import { JWT_SECRET, JWT_EXPIRES_IN } from '../config/jwt.js';
 
 // Generate JWT token
 const signToken = (userId) => {
-  return jwt.sign({ id: userId }, process.env.JWT_SECRET || 'clf_fallback_jwt_secret_key_campus_portal_2026', {
-    expiresIn: process.env.JWT_EXPIRES_IN || '7d',
+  return jwt.sign({ id: userId }, JWT_SECRET, {
+    expiresIn: JWT_EXPIRES_IN,
   });
 };
 

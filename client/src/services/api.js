@@ -15,10 +15,22 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Centralized error extraction
+// Centralized error extraction & token management
 api.interceptors.response.use(
   (res) => res,
   (err) => {
+    // If the token is invalid or expired, clear it from localStorage
+    if (err.response?.status === 401) {
+      const msg = err.response?.data?.message || '';
+      if (
+        msg.includes('token') ||
+        msg.includes('log in') ||
+        msg.includes('Authentication required')
+      ) {
+        localStorage.removeItem('clf_token');
+      }
+    }
+
     const message =
       err.response?.data?.message ||
       err.message ||

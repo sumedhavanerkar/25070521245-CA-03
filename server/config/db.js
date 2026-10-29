@@ -19,6 +19,11 @@ const connectDB = async () => {
     );
   }
 
+  // Strip duplicate key prefix if user copied "MONGODB_URI=..." into the value
+  if (uri.startsWith('MONGODB_URI=')) {
+    uri = uri.replace(/^MONGODB_URI=/, '').trim();
+  }
+
   // Auto-clean angle brackets if user wrote <password> instead of password
   if (uri.includes('<') && uri.includes('>')) {
     uri = uri.replace(/<([^>]+)>/, '$1');

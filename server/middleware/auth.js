@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import { AppError } from '../utils/AppError.js';
+import { JWT_SECRET } from '../config/jwt.js';
 
 // Middleware: require valid JWT token (used for protected routes)
 export const protect = async (req, res, next) => {
@@ -15,7 +16,7 @@ export const protect = async (req, res, next) => {
 
     let decoded;
     try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret');
+      decoded = jwt.verify(token, JWT_SECRET);
     } catch {
       return next(new AppError('Invalid or expired token. Please log in again.', 401));
     }
@@ -38,7 +39,7 @@ export const optionalAuth = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
     // If no Authorization header — just continue without setting req.user
-    if (!authHeader || !authHeader.startsWith('Bearer ') || !process.env.JWT_SECRET) {
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return next();
     }
 
@@ -46,7 +47,7 @@ export const optionalAuth = async (req, res, next) => {
     if (!token) return next();
 
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const decoded = jwt.verify(token, JWT_SECRET);
       const user = await User.findById(decoded.id);
       if (user && user.isActive) req.user = user;
     } catch {

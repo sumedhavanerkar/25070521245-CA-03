@@ -131,6 +131,11 @@ export default function ReportItemPage({ itemType }) {
 
       navigate(`/items/${isEdit ? editId : res.data.data._id}`);
     } catch (err) {
+      if (err.response?.status === 401) {
+        toast.error(err.friendlyMessage || 'Session expired. Please log in again.');
+        navigate('/login', { state: { from: { pathname: isLost ? '/report-lost' : '/report-found' } } });
+        return;
+      }
       toast.error(err.friendlyMessage || 'Failed to submit. Please try again.');
     } finally {
       setSubmitting(false);
